@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversations for {{ book_title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Conversations for {{ book_title }}</h1>
+    
+    <form action="{{ url_for('new_conversation', book_id=book_id) }}" method="post">
+        <textarea name="query" rows="4" cols="50" required placeholder="Start a new conversation"></textarea>
+        {% if not session.get('api_key') %}
+        <input type="text" name="api_key" placeholder="Enter API Key" required>
+        {% endif %}
+        <input type="submit" value="Start New Conversation">
+    </form>
+
+    <h2>Existing Conversations</h2>
+    <ul>
+    {% for conversation in conversations %}
+        <li>
+            <a href="{{ url_for('conversation', book_id=book_id, conversation_id=conversation[0]) }}">{{ conversation[1] }}</a>
+            <form action="{{ url_for('delete_conversation', book_id=book_id, conversation_id=conversation[0]) }}" method="post" style="display: inline;">
+                <input type="submit" value="Delete" onclick="return confirm('Are you sure you want to delete this conversation?');">
+            </form>
+        </li>
+    {% endfor %}
+    </ul>
+    
+    <a href="{{ url_for('index') }}" class="btn">Back to Books</a>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class="flash-messages">
+        {% for message in messages %}
+            <li class="flash-message">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+</body>
+</html>

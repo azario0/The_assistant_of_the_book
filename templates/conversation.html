@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversation for {{ book_title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Conversation for {{ book_title }}</h1>
+    
+    <div id="conversation-history">
+        {{ conversation | safe }}
+    </div>
+    
+    <form method="post">
+        <textarea name="query" rows="4" cols="50" required placeholder="Continue the conversation"></textarea>
+        {% if not session.get('api_key') %}
+        <input type="text" name="api_key" placeholder="Enter API Key" required>
+        {% endif %}
+        <input type="submit" value="Send">
+    </form>
+    
+    <a href="{{ url_for('conversations', book_id=book_id) }}" class="btn">Back to Conversations</a>
+
+    <script>
+        // Scroll to the bottom of the conversation history
+        var conversationHistory = document.getElementById('conversation-history');
+        conversationHistory.scrollTop = conversationHistory.scrollHeight;
+    </script>
+</body>
+</html>

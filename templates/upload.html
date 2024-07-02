@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Book</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Upload Book</h1>
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".epub" required>
+        {% if not session.get('api_key') %}
+        <input type="text" name="api_key" placeholder="Enter API Key" required>
+        {% endif %}
+        <input type="submit" value="Upload">
+    </form>
+    <a href="{{ url_for('index') }}" class="btn">Back to Home</a>
+</body>
+</html>

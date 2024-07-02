@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Book Manager</h1>
+    <a href="{{ url_for('upload_book') }}" class="btn">Upload Book</a>
+    
+    <h2>Uploaded Books</h2>
+    <ul>
+    {% for book in books %}
+        <li>
+            {{ book[1] }}
+            <a href="{{ url_for('conversations', book_id=book[0]) }}" class="btn">Conversations</a>
+            <form action="{{ url_for('delete_book', book_id=book[0]) }}" method="post" style="display: inline;">
+                <input type="submit" value="Delete" onclick="return confirm('Are you sure you want to delete this book?');">
+            </form>
+        </li>
+    {% endfor %}
+    </ul>
+    
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class="flash-messages">
+        {% for message in messages %}
+            <li class="flash-message">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+</body>
+</html>

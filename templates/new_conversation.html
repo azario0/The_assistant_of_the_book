@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Conversation</title>
+</head>
+<body>
+    <h1>New Conversation</h1>
+    <form method="post">
+        <textarea name="query" rows="4" cols="50" required placeholder="Enter your question here"></textarea>
+        <br>
+        <input type="text" name="api_key" placeholder="Enter API Key" required>
+        <br>
+        <input type="submit" value="Start Conversation">
+    </form>
+    <a href="{{ url_for('conversations', book_id=book_id) }}">Back to Conversations</a>
+</body>
+</html>
