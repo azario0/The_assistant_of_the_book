@@ -9,6 +9,8 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGener
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain.memory import ConversationBufferMemory
+import pickle
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Change this to a random secret key
@@ -33,9 +35,11 @@ def init_db():
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   book_id INTEGER,
                   content TEXT,
+                  memory BLOB,
                   FOREIGN KEY (book_id) REFERENCES books (id))''')
     conn.commit()
     conn.close()
+
 
 init_db()
 
@@ -132,19 +136,28 @@ def conversation(book_id, conversation_id):
             api_key = request.form['api_key']
             session['api_key'] = api_key
         
-        # Initialize the conversation chain
-        chain = initialize_conversation_chain(api_key)
+        # Retrieve the memory from the database
+        conn = sqlite3.connect('books.db')
+        c = conn.cursor()
+        c.execute("SELECT memory FROM conversations WHERE id = ?", (conversation_id,))
+        memory_data = c.fetchone()[0]
+        if memory_data:
+            memory = pickle.loads(memory_data)
+        else:
+            memory = ConversationBufferMemory()
+        
+        # Initialize the conversation chain with existing memory
+        chain = initialize_conversation_chain(api_key, memory)
         
         # Get the response
         response = chain.invoke({"query": query})
         
-        # Append to the existing conversation
-        conn = sqlite3.connect('books.db')
-        c = conn.cursor()
+        # Append to the existing conversation and update memory
         c.execute("SELECT content FROM conversations WHERE id = ?", (conversation_id,))
         existing_content = c.fetchone()[0]
         new_content = f"{existing_content}\nQ: {query}\nA: {response['result']}"
-        c.execute("UPDATE conversations SET content = ? WHERE id = ?", (new_content, conversation_id))
+        memory_data = pickle.dumps(memory)
+        c.execute("UPDATE conversations SET content = ?, memory = ? WHERE id = ?", (new_content, memory_data, conversation_id))
         conn.commit()
         conn.close()
         
@@ -221,7 +234,7 @@ def process_book(filepath, api_key):
     
     db.save_local("faiss_index")
 
-def initialize_conversation_chain(api_key):
+def initialize_conversation_chain(api_key, memory=None):
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
     embeddings = GoogleGenerativeAIEmbeddings(model='models/text-embedding-004', google_api_key=api_key)
     db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
@@ -233,7 +246,8 @@ def initialize_conversation_chain(api_key):
     Helpful Answer:"""
     PROMPT = PromptTemplate(template=template, input_variables=["context", "question"])
     
-    memory = ConversationBufferMemory()
+    if not memory:
+        memory = ConversationBufferMemory()
     
     chain = RetrievalQA.from_chain_type(
         llm=llm,
@@ -245,6 +259,7 @@ def initialize_conversation_chain(api_key):
     )
     
     return chain
+
 
 if __name__ == '__main__':
     app.run(debug=True)
